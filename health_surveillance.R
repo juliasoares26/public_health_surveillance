@@ -72,10 +72,6 @@ cat("Pearson dispersion statistic (Poisson model):", round(dispersion, 4), "\n\n
 vmr <- var(mort$deaths_respiratory) / mean(mort$deaths_respiratory)
 cat("Raw variance-to-mean ratio (deaths_respiratory):", round(vmr, 3), "\n\n")
 
-# ==================================================================
-# NEW BLOCK 1: correlation between time_index and log_pop
-# (the actual predictor variables, not the VI matrix)
-# ==================================================================
 cat("\n=== Correlation diagnostic: time_index vs log_pop (predictor variables) ===\n")
 spearman_tp <- cor(mort$time_index, mort$log_pop, method = "spearman")
 pearson_tp  <- cor(mort$time_index, mort$log_pop, method = "pearson")
@@ -169,10 +165,6 @@ cat("Poisson covered:", sum(loo_pois_cov), "/", n, "\n")
 cat("Quasi-Poisson covered:", sum(loo_qp_cov), "/", n, "\n")
 cat("Bagged trees covered:", sum(loo_bag_cov), "/", n, "\n")
 
-# ==================================================================
-# NEW BLOCK 2: exact (Clopper-Pearson) 95% CIs for LOOCV coverage,
-# computed directly from the fold-level coverage indicator vectors
-# ==================================================================
 cat("\n=== Exact (Clopper-Pearson) 95% CIs for LOOCV coverage ===\n")
 
 ci_pois <- binom.test(sum(loo_pois_cov), n)$conf.int
@@ -199,14 +191,10 @@ saveRDS(list(mort = mort, results = results,
 write.csv(mort, "mort_with_predictions.csv", row.names = FALSE)
 cat("\nSaved loo_results_table.csv, model_results.rds, mort_with_predictions.csv, loocv_coverage_ci.csv\n")
 
-# ==================================================================
-# NEW BLOCK 3: rolling-origin / expanding-window robustness check
-# Minimum training window = 20 quarters, strictly past-only training.
-# ==================================================================
 cat("\n=== Rolling-origin / expanding-window robustness check ===\n")
 
 min_train <- 20
-test_idx <- (min_train + 1):n   # origins available to test
+test_idx <- (min_train + 1):n   
 n_test <- length(test_idx)
 cat("Minimum training window:", min_train, "quarters\n")
 cat("Number of evaluable origins (n_test):", n_test, "\n\n")
@@ -218,7 +206,7 @@ ro_actual <- numeric(n_test)
 
 for (k in seq_along(test_idx)) {
   t <- test_idx[k]
-  train <- mort[1:(t - 1), ]      # strictly past observations only
+  train <- mort[1:(t - 1), ]     
   test  <- mort[t, , drop = FALSE]
   ro_actual[k] <- test$deaths_respiratory
 
